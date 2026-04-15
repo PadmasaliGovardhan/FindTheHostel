@@ -87,29 +87,26 @@ function HomeContent() {
       .select('id, name, location, distance_from_klu_km, created_at')
       .eq('status', 'pending');
 
-    if (pendingData) {
-      const enriched = await Promise.all(
-        pendingData.map(async (h: any) => {
-          const { count } = await supabase
-            .from('hostel_confirmations')
-            .select('*', { count: 'exact', head: true })
-            .eq('hostel_id', h.id);
+    if (pendingData && pendingData.length > 0) {
+      const hostelIds = pendingData.map((h: any) => h.id);
 
-          const { data: userConfirm } = await supabase
-            .from('hostel_confirmations')
-            .select('id')
-            .eq('hostel_id', h.id)
-            .eq('user_id', user.id)
-            .maybeSingle();
+      // Batch fetch all confirmations
+      const { data: allConfirmations } = await supabase
+        .from('hostel_confirmations')
+        .select('hostel_id, user_id')
+        .in('hostel_id', hostelIds);
 
-          return {
-            ...h,
-            confirmation_count: count || 0,
-            user_has_confirmed: !!userConfirm,
-          };
-        })
-      );
+      const enriched = pendingData.map((h: any) => {
+        const confirmations = allConfirmations?.filter((c: any) => c.hostel_id === h.id) || [];
+        return {
+          ...h,
+          confirmation_count: confirmations.length,
+          user_has_confirmed: confirmations.some((c: any) => c.user_id === user.id),
+        };
+      });
       setPendingHostels(enriched);
+    } else {
+      setPendingHostels([]);
     }
   };
 
