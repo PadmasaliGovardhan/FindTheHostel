@@ -74,22 +74,22 @@ function ProfileContent() {
 
     if (data && data.length > 0) {
       // Batch fetch hostel names
-      const hostelIds = [...new Set(data.map(r => r.hostel_id))];
+      const hostelIds = [...new Set(data.map((r: any) => r.hostel_id))];
       const { data: hostels } = await supabase
         .from('hostels')
         .select('id, name')
         .in('id', hostelIds);
 
-      const hostelMap = new Map(hostels?.map(h => [h.id, h.name]) || []);
+      const hostelMap = new Map(hostels?.map((h: any) => [h.id, h.name]) || []);
 
-      const enriched = data.map(review => ({
+      const enriched = data.map((review: any) => ({
         ...review,
         hostel_name: hostelMap.get(review.hostel_id) || 'Unknown Hostel',
       }));
       setMyReviews(enriched);
 
       // Batch count upvotes
-      const reviewIds = data.map(r => r.id);
+      const reviewIds = data.map((r: any) => r.id);
       const { data: upvotes } = await supabase
         .from('review_votes')
         .select('review_id')
@@ -113,7 +113,7 @@ function ProfileContent() {
       .eq('vote_type', 'upvote');
 
     if (votes && votes.length > 0) {
-      const reviewIds = votes.map(v => v.review_id);
+      const reviewIds = votes.map((v: any) => v.review_id);
 
       // Batch fetch reviews
       const { data: reviewsData } = await supabase
@@ -123,22 +123,22 @@ function ProfileContent() {
 
       if (reviewsData && reviewsData.length > 0) {
         // Batch fetch hostels
-        const hostelIds = [...new Set(reviewsData.map(r => r.hostel_id))];
+        const hostelIds = [...new Set(reviewsData.map((r: any) => r.hostel_id))];
         const { data: hostels } = await supabase
           .from('hostels')
           .select('id, name')
           .in('id', hostelIds);
-        const hostelMap = new Map(hostels?.map(h => [h.id, h.name]) || []);
+        const hostelMap = new Map(hostels?.map((h: any) => [h.id, h.name]) || []);
 
         // Batch fetch authors
-        const authorIds = [...new Set(reviewsData.map(r => r.user_id))];
+        const authorIds = [...new Set(reviewsData.map((r: any) => r.user_id))];
         const { data: authors } = await supabase
           .from('profiles')
           .select('id, display_name')
           .in('id', authorIds);
-        const authorMap = new Map(authors?.map(a => [a.id, a.display_name]) || []);
+        const authorMap = new Map(authors?.map((a: any) => [a.id, a.display_name]) || []);
 
-        const enriched = reviewsData.map(review => ({
+        const enriched = reviewsData.map((review: any) => ({
           review_id: review.id,
           review_text: review.text,
           hostel_name: hostelMap.get(review.hostel_id) || 'Unknown',
@@ -163,7 +163,7 @@ function ProfileContent() {
       .eq('status', 'pending');
 
     if (pendingData && pendingData.length > 0) {
-      const hostelIds = pendingData.map(h => h.id);
+      const hostelIds = pendingData.map((h: any) => h.id);
 
       // Batch fetch confirmations
       const { data: allConfirmations } = await supabase
@@ -171,12 +171,12 @@ function ProfileContent() {
         .select('hostel_id, user_id')
         .in('hostel_id', hostelIds);
 
-      const enriched = pendingData.map(h => {
-        const confirmations = allConfirmations?.filter(c => c.hostel_id === h.id) || [];
+      const enriched = pendingData.map((h: any) => {
+        const confirmations = allConfirmations?.filter((c: any) => c.hostel_id === h.id) || [];
         return {
           ...h,
           confirmation_count: confirmations.length,
-          user_has_confirmed: confirmations.some(c => c.user_id === user.id),
+          user_has_confirmed: confirmations.some((c: any) => c.user_id === user.id),
         };
       });
       setPendingHostels(enriched);

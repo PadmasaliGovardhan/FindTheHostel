@@ -98,7 +98,7 @@ export default function HostelDetailPage() {
       return;
     }
 
-    const reviewIds = reviewsData.map(r => r.id);
+    const reviewIds = reviewsData.map((r: any) => r.id);
 
     // Batch fetch all votes for these reviews in ONE query
     const { data: allVotes } = await supabase
@@ -113,19 +113,19 @@ export default function HostelDetailPage() {
       .in('review_id', reviewIds);
 
     // Build enriched reviews from batch data
-    const enriched = reviewsData.map((review) => {
-      const reviewVotes = allVotes?.filter(v => v.review_id === review.id) || [];
-      const upvotes = reviewVotes.filter(v => v.vote_type === 'upvote').length;
-      const downvotes = reviewVotes.filter(v => v.vote_type === 'downvote').length;
+    const enriched = reviewsData.map((review: any) => {
+      const reviewVotes = allVotes?.filter((v: any) => v.review_id === review.id) || [];
+      const upvotes = reviewVotes.filter((v: any) => v.vote_type === 'upvote').length;
+      const downvotes = reviewVotes.filter((v: any) => v.vote_type === 'downvote').length;
 
       const userVote = user
-        ? (reviewVotes.find(v => v.user_id === user.id)?.vote_type as 'upvote' | 'downvote' | null) ?? null
+        ? (reviewVotes.find((v: any) => v.user_id === user.id)?.vote_type as 'upvote' | 'downvote' | null) ?? null
         : null;
 
-      const reviewReports = allReports?.filter(r => r.review_id === review.id) || [];
+      const reviewReports = allReports?.filter((r: any) => r.review_id === review.id) || [];
       const reportCount = reviewReports.length;
       const userHasReported = user
-        ? reviewReports.some(r => r.user_id === user.id)
+        ? reviewReports.some((r: any) => r.user_id === user.id)
         : false;
 
       return {
@@ -140,7 +140,7 @@ export default function HostelDetailPage() {
 
     // Find user's review
     if (user) {
-      const myReview = enriched.find((r) => r.user_id === user.id);
+      const myReview = enriched.find((r: any) => r.user_id === user.id);
       setUserReview(myReview || null);
     }
 
@@ -158,7 +158,7 @@ export default function HostelDetailPage() {
 
   // Sort reviews
   const sortedReviews = [...reviews]
-    .filter((r) => r.user_id !== user?.id) // Exclude user's own review from list (shown separately)
+    .filter((r: any) => r.user_id !== user?.id) // Exclude user's own review from list (shown separately)
     .sort((a, b) => {
       if (sortBy === 'helpful') {
         return (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes);

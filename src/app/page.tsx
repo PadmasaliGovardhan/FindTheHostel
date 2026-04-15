@@ -89,7 +89,7 @@ function HomeContent() {
 
     if (pendingData) {
       const enriched = await Promise.all(
-        pendingData.map(async (h) => {
+        pendingData.map(async (h: any) => {
           const { count } = await supabase
             .from('hostel_confirmations')
             .select('*', { count: 'exact', head: true })
@@ -130,7 +130,7 @@ function HomeContent() {
     // Search
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      result = result.filter((h) =>
+      result = result.filter((h: any) =>
         h.name.toLowerCase().includes(query)
       );
     }
@@ -138,13 +138,13 @@ function HomeContent() {
     // Min rating filter
     if (minRating) {
       const min = parseFloat(minRating);
-      result = result.filter((h) => h.avg_overall >= min);
+      result = result.filter((h: any) => h.avg_overall >= min);
     }
 
     // Max distance filter
     if (maxDistance) {
       const max = parseFloat(maxDistance);
-      result = result.filter((h) => h.distance_from_klu_km <= max);
+      result = result.filter((h: any) => h.distance_from_klu_km <= max);
     }
 
     // Sort
