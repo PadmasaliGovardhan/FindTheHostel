@@ -56,7 +56,6 @@ function HomeContent() {
     const message = searchParams.get('message');
     if (error && message) {
       const decoded = decodeURIComponent(message);
-      // Replace technical errors with user-friendly messages
       if (decoded.includes('PKCE') || decoded.includes('code verifier')) {
         setAuthError('Please open the sign-in link in the same browser where you entered your email. Try signing in again from this browser.');
       } else if (decoded.includes('expired') || decoded.includes('invalid')) {
@@ -67,17 +66,27 @@ function HomeContent() {
     }
   }, [searchParams]);
 
-  const fetchHostels = async () => {
-    const { data, error } = await supabase
-      .from('hostel_stats')
-      .select('*')
-      .eq('status', 'approved');
+  // FIX: fetchHostels is defined inside the effect and depends on [user]
+  // so it re-runs with the correct auth context on every login/logout
+  useEffect(() => {
+    const fetchHostels = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('hostel_stats')
+        .select('*')
+        .eq('status', 'approved');
 
-    if (!error && data) {
-      setHostels(data);
-    }
-    setLoading(false);
-  };
+      if (error) {
+        console.error('Hostel fetch error:', error);
+        setAuthError(`Database Error: ${error.message}. Please check RLS or View permissions.`);
+      } else if (data) {
+        setHostels(data);
+      }
+      setLoading(false);
+    };
+
+    fetchHostels();
+  }, [user]); // re-fetch when auth state changes
 
   const fetchPendingHostels = async () => {
     if (!user) return;
@@ -90,7 +99,6 @@ function HomeContent() {
     if (pendingData && pendingData.length > 0) {
       const hostelIds = pendingData.map((h: any) => h.id);
 
-      // Batch fetch all confirmations
       const { data: allConfirmations } = await supabase
         .from('hostel_confirmations')
         .select('hostel_id, user_id')
@@ -111,12 +119,10 @@ function HomeContent() {
   };
 
   useEffect(() => {
-    fetchHostels();
-  }, []);
-
-  useEffect(() => {
     if (user) {
       fetchPendingHostels();
+    } else {
+      setPendingHostels([]); // clear pending list on logout
     }
   }, [user]);
 
@@ -124,27 +130,23 @@ function HomeContent() {
   const filteredHostels = useMemo(() => {
     let result = [...hostels];
 
-    // Search
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      result = result.filter((h: any) =>
+      result = result.filter((h) =>
         h.name.toLowerCase().includes(query)
       );
     }
 
-    // Min rating filter
     if (minRating) {
       const min = parseFloat(minRating);
-      result = result.filter((h: any) => h.avg_overall >= min);
+      result = result.filter((h) => h.avg_overall >= min);
     }
 
-    // Max distance filter
     if (maxDistance) {
       const max = parseFloat(maxDistance);
-      result = result.filter((h: any) => h.distance_from_klu_km <= max);
+      result = result.filter((h) => h.distance_from_klu_km <= max);
     }
 
-    // Sort
     switch (sortBy) {
       case 'top_rated':
         result.sort((a, b) => b.avg_overall - a.avg_overall);
@@ -251,7 +253,6 @@ function HomeContent() {
                   userHasConfirmed={hostel.user_has_confirmed}
                   onConfirm={() => {
                     fetchPendingHostels();
-                    fetchHostels();
                   }}
                 />
               ))}
